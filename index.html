@@ -1,103 +1,129 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Emoji琛ㄦ儏閫夋嫨鍣?/title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:20px;min-height:100vh}
-.container{max-width:700px;margin:0 auto}
-h1{text-align:center;color:#333;margin-bottom:20px;font-size:22px}
-.card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:24px;margin-bottom:16px}
-.search{width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:15px;box-sizing:border-box;margin-bottom:12px}
-.categories{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
-.cat-btn{padding:6px 14px;border:1px solid #ddd;background:#fff;border-radius:20px;cursor:pointer;font-size:13px}
-.cat-btn.active{background:#007bff;color:#fff;border-color:#007bff}
-.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:400px;overflow-y:auto}
-.emoji-item{font-size:24px;padding:8px;text-align:center;cursor:pointer;border-radius:6px;transition:background .15s}
-.emoji-item:hover{background:#e9ecef}
-.picked{min-height:50px;background:#f5f5f5;border-radius:6px;padding:12px;margin-top:12px;font-size:20px;word-break:break-all;min-height:60px}
-.btn{background:#007bff;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:14px;margin-top:8px}
-.btn:hover{background:#0056b3}
-.btn-green{background:#28a745}
-.btn-green:hover{background:#218838}
-.actions{display:flex;gap:8px;margin-top:12px}
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:6px;display:none;z-index:99}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表情选择器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; color: #333; }
+        .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; margin-bottom: 16px; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #ddd; padding-bottom: 12px; }
+        .tab { padding: 6px 12px; border: none; background: #e9ecef; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .tab.active { background: #007bff; color: #fff; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 8px; }
+        .emoji-btn { font-size: 1.8rem; padding: 8px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; transition: all 0.2s; }
+        .emoji-btn:hover { background: #e9ecef; transform: scale(1.1); }
+        .emoji-btn:active { transform: scale(0.95); }
+        .selected-area { background: #f5f5f5; padding: 16px; border-radius: 8px; min-height: 80px; word-wrap: break-word; font-size: 1.5rem; }
+        .actions { margin-top: 12px; display: flex; gap: 8px; }
+        .btn { padding: 8px 20px; border-radius: 4px; cursor: pointer; border: none; font-size: 14px; }
+        .btn-blue { background: #007bff; color: #fff; }
+        .btn-green { background: #28a745; color: #fff; }
+        .btn-gray { background: #6c757d; color: #fff; }
+        .search { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 16px; }
+    </style>
 </head>
 <body>
-<div class="container">
-<h1>Emoji琛ㄦ儏閫夋嫨鍣?/h1>
-<div class="card">
-<input type="text" class="search" id="searchInput" placeholder="鎼滅储Emoji...">
-<div class="categories" id="catBar"></div>
-<div class="emoji-grid" id="emojiGrid"></div>
-</div>
-<div class="card">
-<label style="font-weight:600;color:#555;margin-bottom:8px;display:block">宸查€夋嫨鐨凟moji</label>
-<div class="picked" id="picked"></div>
-<div class="actions">
-<button class="btn" onclick="copyPicked()">澶嶅埗鍏ㄩ儴</button>
-<button class="btn btn-green" onclick="clearPicked()">娓呯┖</button>
-</div>
-</div>
-</div>
-<div class="toast" id="toast">宸插鍒跺埌鍓创鏉?</div>
-<script>
-const emojis={
-'馃榾 绗戣劯':['馃榾','馃榿','馃槀','馃ぃ','馃槂','馃槃','馃槄','馃槅','馃槈','馃槉','馃構','馃槑','馃槏','馃槝','馃グ','馃槜','馃槞','馃槡','馃檪','馃','馃ぉ','馃','馃え','馃槓','馃槕','馃樁','馃檮','馃槒','馃槪','馃槬','馃槷','馃','馃槸','馃槳','馃槴','馃槾','馃槍','馃槢','馃槣','馃槤','馃い','馃槖','馃槗','馃様','馃槙','馃檭','馃','馃槻','馃檨','馃槚','馃槥','馃槦','馃槫','馃槩','馃槶','馃槮','馃槯','馃槰','馃槱','馃く','馃槵','馃槹','馃槺','馃サ','馃ザ','馃槼','馃お','馃樀','馃ゴ','馃槧','馃槨','馃が','馃樂','馃','馃','馃あ','馃ぎ','馃ズ','馃ス','馃槆','馃','馃ぁ','馃コ','馃ジ','馃槇','馃懣','馃懝','馃懞','馃拃','鈽狅笍','馃懟','馃懡','馃懢','馃'],
-'馃憢 鎵嬪娍':['馃憢','馃','馃枑','鉁?,'馃枛','馃憣','馃','馃','鉁岋笍','馃','馃','馃','馃','馃憟','馃憠','馃憜','馃枙','馃憞','鈽濓笍','馃憤','馃憥','鉁?,'馃憡','馃','馃','馃憦','馃檶','馃憪','馃げ','馃','馃檹'],
-'鉂わ笍 鐖卞績':['鉂わ笍','馃А','馃挍','馃挌','馃挋','馃挏','馃枻','馃','馃','馃挃','鉂ｏ笍','馃挄','馃挒','馃挀','馃挆','馃挅','馃挊','馃挐'],
-'馃惐 鍔ㄧ墿':['馃惗','馃惐','馃惌','馃惞','馃惏','馃','馃惢','馃惣','馃惃','馃惎','馃','馃惍','馃惙','馃惛','馃惖','馃悢','馃惂','馃惁','馃','馃','馃','馃惔','馃','馃悵','馃悰','馃','馃悓','馃悶','馃悳','馃','馃悽','馃悕','馃','馃','馃悪','馃','馃','馃','馃悺','馃悹','馃悷','馃惉','馃惓','馃悑','馃','馃悐','馃悈','馃悊','馃','馃','馃悩','馃','馃惇','馃惈','馃','馃','馃悆','馃悅','馃悇','馃悗','馃悥','馃悘','馃悜','馃','馃悙','馃','馃悤','馃惄','馃Ξ'],
-'馃崕 椋熺墿':['馃崕','馃崐','馃崑','馃崒','馃崏','馃崌','馃崜','馃珢','馃崍','馃崚','馃崙','馃キ','馃崓','馃ゥ','馃','馃崊','馃崋','馃','馃ウ','馃ガ','馃尪','馃珣','馃尳','馃','馃','馃','馃','馃崰','馃','馃ク','馃崬','馃','馃エ','馃','馃','馃嵆','馃','馃','馃','馃','馃ォ','馃崡','馃崠','馃尛','馃崝','馃崯','馃崟','馃珦','馃オ','馃','馃','馃尞','馃尟','馃珨','馃','馃','馃崫','馃崪','馃嵅','馃崨','馃崳','馃嵄','馃','馃Κ','馃崵','馃崣','馃崥','馃崢','馃崶','馃','馃ギ'],
-'鈿?娲诲姩':['鈿?,'馃弨','馃張','鈿?,'馃','馃幘','馃彁','馃弶','馃','馃幈','馃獉','馃彄','馃徃','馃彃','馃彂','馃','馃弿','馃獌','馃','鉀?,'馃獊','馃徆','馃帲','馃た','馃','馃','馃幗','馃浌','馃浄','鉀?,'馃','馃幙','鉀?,'馃弬','馃獋'],
-'馃彔 鐗╁搧':['馃彔','馃彙','馃彚','馃彛','馃彜','馃彞','馃彟','馃彣','馃彥','馃彧','馃彨','馃彫','馃彮','馃椉','馃椊','鉀?,'馃晫','馃洉','馃晬','鉀?,'馃晪','鉀?,'鉀?,'馃彆','馃彅','鉀?,'馃寢','馃彎','馃彇','馃彍','馃彏','馃寘','馃寗','馃尃','馃巼','馃巻','馃寛','馃寙','馃寚','馃彊','馃寖','馃寣','馃寜','馃寔'],
-'馃捇 绉戞妧':['馃捇','馃枼','馃枿','鈱笍','馃柋','馃柌','馃捊','馃捑','馃捒','馃搥','馃摷','馃摲','馃摳','馃摴','馃帴','馃摻','馃帪','馃摓','鈽庯笍','馃摕','馃摖','馃摵','馃摶','馃帣','馃帤','馃帥','馃Л','鈴?,'鈴?,'鈴?,'馃暟','鈱?,'鈴?,'馃摗','馃攱','馃','馃攲','馃挕','馃敠','馃暞','馃獢','馃Н','馃洟','馃捀','馃挼','馃挻','馃挾','馃挿','馃獧','馃挵','馃挸','馃拵'],
-'馃殫 浜ら€?:['馃殫','馃殨','馃殭','馃殞','馃殠','馃弾','馃殦','馃殤','馃殥','馃殣','馃浕','馃殮','馃殯','馃殰','馃弽','馃浀','馃毑','馃洿','馃浌','馃殢','馃洠','馃洡','馃殽','馃殾','馃毀','鈿?,'馃洘','鉀?,'馃浂','馃殼','馃洺','鉀?,'馃洢','馃殺','鉁堬笍','馃洨','馃洬','馃洭','馃獋','馃捄','馃殎','馃殶','馃殸','馃殹','馃洶','馃殌','馃浉'],
-'馃帹 绗﹀彿':['鉁?,'鉂?,'鉂?,'鉂?,'鈥硷笍','鈦夛笍','馃挴','馃敽','馃敾','馃敻','馃敼','馃敹','馃敺','馃敵','馃敳','猸?,'鉀?,'馃毇','馃挜','馃挮','馃挦','馃挩','馃暢','馃挘','馃挰','馃挱','馃棷','鈾狅笍','鈾ｏ笍','鈾ワ笍','鈾︼笍','馃儚','馃幋','馃晲','馃晳','馃晵','馃晸','馃晹','馃晻','馃晼','馃晽','馃晿','馃暀','馃暁','馃暃']
-};
-let picked=[];
-const catBar=document.getElementById('catBar');
-const grid=document.getElementById('emojiGrid');
-const searchInput=document.getElementById('searchInput');
-let currentCat=Object.keys(emojis)[0];
-function renderCats(){
-catBar.innerHTML='';
-Object.keys(emojis).forEach(cat=>{
-const btn=document.createElement('div');
-btn.className='cat-btn'+(cat===currentCat?' active':'');
-btn.textContent=cat.split(' ')[0];
-btn.title=cat;
-btn.onclick=()=>{currentCat=cat;renderCats();renderEmojis(emojis[cat])};
-catBar.appendChild(btn);
-});
-}
-function renderEmojis(list){
-grid.innerHTML='';
-list.forEach(e=>{
-const d=document.createElement('div');
-d.className='emoji-item';
-d.textContent=e;
-d.onclick=()=>{picked.push(e);renderPicked()};
-grid.appendChild(d);
-});
-}
-function renderPicked(){document.getElementById('picked').textContent=picked.join('')}
-function copyPicked(){
-if(!picked.length)return;
-navigator.clipboard.writeText(picked.join(' '));
-const t=document.getElementById('toast');t.style.display='block';setTimeout(()=>t.style.display='none',1500);
-}
-function clearPicked(){picked=[];renderPicked()}
-searchInput.addEventListener('input',e=>{
-const q=e.target.value.toLowerCase();
-if(!q){renderEmojis(emojis[currentCat]);return}
-const all=Object.values(emojis).flat();
-const filtered=all.filter(e=>e.includes(q));
-renderEmojis(filtered.length?filtered:all);
-});
-renderCats();renderEmojis(emojis[currentCat]);
-</script>
+    <div class="container">
+        <h1>表情选择器</h1>
+        <div class="card">
+            <input type="text" class="search" id="search" placeholder="搜索表情..." oninput="filterEmojis()">
+            <div class="tabs" id="tabs"></div>
+            <div class="emoji-grid" id="grid"></div>
+        </div>
+        <div class="card">
+            <label>已选择的表情</label>
+            <div class="selected-area" id="selected">点击上方表情进行选择</div>
+            <div class="actions">
+                <button class="btn btn-blue" onclick="copySelected()">复制选中</button>
+                <button class="btn btn-green" onclick="copyAll()">复制全部</button>
+                <button class="btn btn-gray" onclick="clearSelected()">清空</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const categories = {
+            '😀 笑脸': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐'],
+            '👋 手势': ['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪'],
+            '❤️ 心情': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','♥️'],
+            '🐶 动物': ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐒','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏'],
+            '🍎 食物': ['🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕','🫒','🧄','🧅','🥔','🍠','🥐','🥯','🍞','🥖','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🦴','🌭','🍔','🍟','🍕','🫓','🥪','🥙','🧆','🌮','🌯','🫔','🥗','🥘','🫕','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥠','🥮','🍢','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🍼','☕','🫖','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊'],
+            '⚽ 活动': ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','🤺','⛹️','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🤹','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🪘','🎷','🎺','🪗','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮','🕹️','🎰'],
+            '🚗 交通': ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🦯','🦽','🦼','🛴','🚲','🛵','🏍️','🛺','🚨','🚔','🚍','🚘','🚖','🚡','🚠','🚟','🚃','🚋','🚞','🚝','🚄','🚅','🚈','🚂','🚆','🚇','🚊','🚉','✈️','🛫','🛬','🛩️','💺','🛰️','🚀','🛸','🚁','🛶','⛵','🚤','🛥️','🛳️','⛴️','🚢','⚓','🪝','⛽','🚧','🚦','🚥','🚏','🗺️','🗿','🗽','🗼','🏰','🏯','🏟️','🎡','🎢','🎠','⛲','⛱️','🏖️','🏝️','🏜️','🌋','⛰️','🏔️','🗻','🏕️','⛺','🛖','🏠','🏡','🏘️','🏚️','🏗️','🏭','🏢','🏬','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏩','💒','🏛️','⛪','🕌','🕍','🛕','🕋','⛩️'],
+            '💡 物品': ['💡','🔦','🏮','🪔','📱','💻','🖥️','🖨️','⌨️','🖱️','🖲️','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🎙️','🎚️','🎛️','🧭','⏱️','⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🔌','💎','🔧','🪛','🔩','⚙️','🧱','🪜','🧲','🔫','💣','🧨','🪓','🔪','🗡️','⚔️','🛡️','🚬','⚰️','🪦','⚱️','🏺','🔮','📿','🧿','💈','⚗️','🔭','🔬','🕳️','🩹','🩺','💊','💉','🩸','🧬','🦠','🧫','🧪','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🪄','🪅','🎊','🎉','🎎','🏮','🎐','🧧','✉️','📩','📨','📧','💌','📥','📤','📦','🏷️','📪','📫','📬','📭','📮','📯','📜','📃','📄','📑','🧾','📊','📈','📉','🗒️','🗓️','📆','📅','🗑️','📇','🗃️','🗳️','🗄️','📋','📁','📂','🗂️','🗞️','📰','📓','📔','📒','📕','📗','📘','📙','📚','📖','🔖','🧷','🔗','📎','🖇️','📐','📏','🧮','📌','📍','✂️','🖊️','🖋️','✒️','🖌️','🖍️','📝','✏️','🔍','🔎','🔏','🔐','🔒','🔓'],
+            '🔣 符号': ['❤️','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🛗','🈳','🈂️','🛂','🛃','🛄','🛅','🚹','🚺','🚼','⚧️','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🆖','🆗','🆙','🆒','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔢','#️⃣','*️⃣','⏏️','▶️','⏸️','⏯️','⏹️','⏺️','⏭️','⏮️','⏩','⏪','⏫','⏬','◀️','🔼','🔽','➡️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↪️','↩️','⤴️','⤵️','🔀','🔁','🔂','🔄','🔃','🎵','🎶','➕','➖','➗','✖️','🟰','♾️','💲','💱','™️','©️','®️','👁️‍🗨️','🔚','🔙','🔛','🔝','🔜','〰️','➰','➿','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📣','📢','💬','💭','🗯️','♠️','♣️','♥️','♦️','🃏','🎴','🀄','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛']
+        };
+        
+        let currentCategory = '😀 笑脸';
+        let selected = [];
+        
+        function init() {
+            const tabs = document.getElementById('tabs');
+            Object.keys(categories).forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'tab' + (name === currentCategory ? ' active' : '');
+                btn.textContent = name.split(' ')[0];
+                btn.title = name;
+                btn.onclick = () => selectCategory(name);
+                tabs.appendChild(btn);
+            });
+            renderEmojis();
+        }
+        
+        function selectCategory(name) {
+            currentCategory = name;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderEmojis();
+        }
+        
+        function renderEmojis() {
+            const grid = document.getElementById('grid');
+            const search = document.getElementById('search').value.toLowerCase();
+            const emojis = search ? Object.values(categories).flat().filter(e => e.includes(search)) : categories[currentCategory];
+            
+            grid.innerHTML = emojis.map(e => `<button class="emoji-btn" onclick="addEmoji('${e}')">${e}</button>`).join('');
+        }
+        
+        function addEmoji(emoji) {
+            selected.push(emoji);
+            document.getElementById('selected').textContent = selected.join('');
+        }
+        
+        function filterEmojis() {
+            renderEmojis();
+        }
+        
+        function copySelected() {
+            const text = selected.join('');
+            if (!text) return;
+            navigator.clipboard.writeText(text);
+            showCopyFeedback();
+        }
+        
+        function copyAll() {
+            const text = document.getElementById('selected').textContent;
+            if (!text) return;
+            navigator.clipboard.writeText(text);
+            showCopyFeedback();
+        }
+        
+        function showCopyFeedback() {
+            const btn = event.target;
+            const original = btn.textContent;
+            btn.textContent = '已复制!';
+            setTimeout(() => btn.textContent = original, 1500);
+        }
+        
+        function clearSelected() {
+            selected = [];
+            document.getElementById('selected').textContent = '点击上方表情进行选择';
+        }
+        
+        init();
+    </script>
 </body>
 </html>
